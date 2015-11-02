@@ -9,6 +9,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.mossle.api.tenant.TenantHolder;
+
 import com.mossle.bpm.persistence.domain.BpmCategory;
 import com.mossle.bpm.persistence.domain.BpmConfBase;
 import com.mossle.bpm.persistence.domain.BpmProcess;
@@ -19,13 +21,12 @@ import com.mossle.bpm.persistence.manager.BpmProcessManager;
 import com.mossle.bpm.persistence.manager.BpmTaskDefManager;
 import com.mossle.bpm.persistence.manager.BpmTaskDefNoticeManager;
 
+import com.mossle.core.export.Exportor;
+import com.mossle.core.export.TableModel;
 import com.mossle.core.hibernate.PropertyFilter;
 import com.mossle.core.mapper.BeanMapper;
 import com.mossle.core.page.Page;
 import com.mossle.core.spring.MessageHelper;
-
-import com.mossle.ext.export.Exportor;
-import com.mossle.ext.export.TableModel;
 
 import org.activiti.engine.ProcessEngine;
 
@@ -50,12 +51,15 @@ public class BpmProcessController {
     private BeanMapper beanMapper = new BeanMapper();
     private ProcessEngine processEngine;
     private MessageHelper messageHelper;
+    private TenantHolder tenantHolder;
 
     @RequestMapping("bpm-process-list")
     public String list(@ModelAttribute Page page,
             @RequestParam Map<String, Object> parameterMap, Model model) {
+        String tenantId = tenantHolder.getTenantId();
         List<PropertyFilter> propertyFilters = PropertyFilter
                 .buildFromMap(parameterMap);
+        propertyFilters.add(new PropertyFilter("EQS_tenantId", tenantId));
         page = bpmProcessManager.pagedQuery(page, propertyFilters);
         model.addAttribute("page", page);
 
@@ -91,6 +95,9 @@ public class BpmProcessController {
             beanMapper.copy(bpmProcess, dest);
         } else {
             dest = bpmProcess;
+
+            String tenantId = tenantHolder.getTenantId();
+            dest.setTenantId(tenantId);
         }
 
         dest.setBpmCategory(bpmCategoryManager.get(bpmCategoryId));
@@ -166,5 +173,10 @@ public class BpmProcessController {
     @Resource
     public void setMessageHelper(MessageHelper messageHelper) {
         this.messageHelper = messageHelper;
+    }
+
+    @Resource
+    public void setTenantHolder(TenantHolder tenantHolder) {
+        this.tenantHolder = tenantHolder;
     }
 }

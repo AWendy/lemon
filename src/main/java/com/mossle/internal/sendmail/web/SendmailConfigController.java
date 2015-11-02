@@ -12,16 +12,17 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.mossle.api.tenant.TenantHolder;
+
+import com.mossle.core.export.Exportor;
+import com.mossle.core.export.TableModel;
 import com.mossle.core.hibernate.PropertyFilter;
+import com.mossle.core.mail.MailDTO;
+import com.mossle.core.mail.MailHelper;
+import com.mossle.core.mail.MailServerInfo;
 import com.mossle.core.mapper.BeanMapper;
 import com.mossle.core.page.Page;
 import com.mossle.core.spring.MessageHelper;
-
-import com.mossle.ext.export.Exportor;
-import com.mossle.ext.export.TableModel;
-import com.mossle.ext.mail.MailDTO;
-import com.mossle.ext.mail.MailHelper;
-import com.mossle.ext.mail.MailServerInfo;
 
 import com.mossle.internal.sendmail.persistence.domain.SendmailConfig;
 import com.mossle.internal.sendmail.persistence.manager.SendmailConfigManager;
@@ -43,12 +44,15 @@ public class SendmailConfigController {
     private MessageHelper messageHelper;
     private Exportor exportor;
     private BeanMapper beanMapper = new BeanMapper();
+    private TenantHolder tenantHolder;
 
     @RequestMapping("sendmail-config-list")
     public String list(@ModelAttribute Page page,
             @RequestParam Map<String, Object> parameterMap, Model model) {
+        String tenantId = tenantHolder.getTenantId();
         List<PropertyFilter> propertyFilters = PropertyFilter
                 .buildFromMap(parameterMap);
+        propertyFilters.add(new PropertyFilter("EQS_tenantId", tenantId));
         page = sendmailConfigManager.pagedQuery(page, propertyFilters);
         model.addAttribute("page", page);
 
@@ -69,6 +73,7 @@ public class SendmailConfigController {
     @RequestMapping("sendmail-config-save")
     public String save(@ModelAttribute SendmailConfig sendmailConfig,
             RedirectAttributes redirectAttributes) {
+        String tenantId = tenantHolder.getTenantId();
         Long id = sendmailConfig.getId();
         SendmailConfig dest = null;
 
@@ -77,6 +82,7 @@ public class SendmailConfigController {
             beanMapper.copy(sendmailConfig, dest);
         } else {
             dest = sendmailConfig;
+            dest.setTenantId(tenantId);
         }
 
         sendmailConfigManager.save(dest);
@@ -103,8 +109,10 @@ public class SendmailConfigController {
             @RequestParam Map<String, Object> parameterMap,
             HttpServletRequest request, HttpServletResponse response)
             throws Exception {
+        String tenantId = tenantHolder.getTenantId();
         List<PropertyFilter> propertyFilters = PropertyFilter
                 .buildFromMap(parameterMap);
+        propertyFilters.add(new PropertyFilter("EQS_tenantId", tenantId));
         page = sendmailConfigManager.pagedQuery(page, propertyFilters);
 
         List<SendmailConfig> sendmailConfigs = (List<SendmailConfig>) page
@@ -122,14 +130,16 @@ public class SendmailConfigController {
         SendmailConfig sendmailConfig = sendmailConfigManager.get(id);
         MailServerInfo mailServerInfo = new MailServerInfo();
         mailServerInfo.setHost(sendmailConfig.getHost());
+        mailServerInfo.setPort(sendmailConfig.getPort());
         mailServerInfo.setSmtpAuth(sendmailConfig.getSmtpAuth() == 1);
         mailServerInfo.setSmtpStarttls(sendmailConfig.getSmtpStarttls() == 1);
+        mailServerInfo.setSmtpSsl(sendmailConfig.getSmtpSsl() == 1);
         mailServerInfo.setUsername(sendmailConfig.getUsername());
         mailServerInfo.setPassword(sendmailConfig.getPassword());
         mailServerInfo.setDefaultFrom(sendmailConfig.getDefaultFrom());
 
         MailDTO mailDto = new MailDTO();
-        mailDto.setTo("demo.mossle@gmail.com");
+        mailDto.setTo("lingo@mossle.com");
         mailDto.setSubject("test");
         mailDto.setContent("test");
 
@@ -161,5 +171,10 @@ public class SendmailConfigController {
     @Resource
     public void setExportor(Exportor exportor) {
         this.exportor = exportor;
+    }
+
+    @Resource
+    public void setTenantHolder(TenantHolder tenantHolder) {
+        this.tenantHolder = tenantHolder;
     }
 }

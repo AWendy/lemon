@@ -53,7 +53,13 @@ public class SendmailConfig implements java.io.Serializable {
     private String testMail;
 
     /** null. */
-    private String scopeId;
+    private String tenantId;
+
+    /** null. */
+    private Integer port;
+
+    /** null. */
+    private Integer smtpSsl;
 
     /** . */
     private Set<SendmailQueue> sendmailQueues = new HashSet<SendmailQueue>(0);
@@ -67,7 +73,8 @@ public class SendmailConfig implements java.io.Serializable {
 
     public SendmailConfig(String name, String host, String username,
             String password, Integer smtpAuth, Integer smtpStarttls,
-            String status, String defaultFrom, String testMail, String scopeId,
+            String status, String defaultFrom, String testMail,
+            String tenantId, Integer port, Integer smtpSsl,
             Set<SendmailQueue> sendmailQueues,
             Set<SendmailHistory> sendmailHistories) {
         this.name = name;
@@ -79,7 +86,9 @@ public class SendmailConfig implements java.io.Serializable {
         this.status = status;
         this.defaultFrom = defaultFrom;
         this.testMail = testMail;
-        this.scopeId = scopeId;
+        this.tenantId = tenantId;
+        this.port = port;
+        this.smtpSsl = smtpSsl;
         this.sendmailQueues = sendmailQueues;
         this.sendmailHistories = sendmailHistories;
     }
@@ -227,17 +236,45 @@ public class SendmailConfig implements java.io.Serializable {
     }
 
     /** @return null. */
-    @Column(name = "SCOPE_ID", length = 50)
-    public String getScopeId() {
-        return this.scopeId;
+    @Column(name = "TENANT_ID", length = 50)
+    public String getTenantId() {
+        return this.tenantId;
     }
 
     /**
-     * @param scopeId
+     * @param tenantId
      *            null.
      */
-    public void setScopeId(String scopeId) {
-        this.scopeId = scopeId;
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    /** @return null. */
+    @Column(name = "PORT")
+    public Integer getPort() {
+        return this.port;
+    }
+
+    /**
+     * @param port
+     *            null.
+     */
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
+    /** @return null. */
+    @Column(name = "SMTP_SSL")
+    public Integer getSmtpSsl() {
+        return this.smtpSsl;
+    }
+
+    /**
+     * @param smtpSsl
+     *            null.
+     */
+    public void setSmtpSsl(Integer smtpSsl) {
+        this.smtpSsl = smtpSsl;
     }
 
     /** @return . */
